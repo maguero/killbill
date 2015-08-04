@@ -77,17 +77,6 @@ public class IncompletePaymentTransactionTask extends CompletionTaskBase<Payment
         super(internalCallContextFactory, paymentConfig, paymentDao, clock, paymentStateMachineHelper, retrySMHelper, accountInternalApi, pluginRegistry, locker);
     }
 
-    @Override
-    public Iterable<PaymentTransactionModelDao> getItemsForIteration() {
-        // This is not triggered by Janitor proper but instead relies on bus event + notificationQ
-        return ImmutableList.of();
-    }
-
-    @Override
-    public void doIteration(final PaymentTransactionModelDao paymentTransaction) {
-        // Nothing
-    }
-
     public void processNotification(final JanitorNotificationKey notificationKey, final UUID userToken, final Long accountRecordId, final long tenantRecordId) {
 
         final InternalTenantContext internalTenantContext = internalCallContextFactory.createInternalTenantContext(tenantRecordId, accountRecordId);

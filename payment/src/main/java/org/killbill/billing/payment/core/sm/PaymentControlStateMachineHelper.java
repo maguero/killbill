@@ -36,12 +36,14 @@ public class PaymentControlStateMachineHelper {
     private final String RETRY_OPERATION_NAME = "OP_RETRY";
     private static final String INIT_STATE_NAME = "INIT";
     private static final String RETRIED_STATE_NAME = "RETRIED";
+    private static final String ABORTED_STATE_NAME = "ABORTED";
 
     private final StateMachineConfig stateMachineConfig;
     private final StateMachine stateMachine;
     private final Operation operation;
     private final State initialState;
     private final State retriedState;
+    private final State abortedState;
 
     @Inject
     public PaymentControlStateMachineHelper(@Named(PaymentModule.STATE_MACHINE_RETRY) final StateMachineConfig retryStateMachineConfig) throws MissingEntryException {
@@ -50,6 +52,7 @@ public class PaymentControlStateMachineHelper {
         this.operation = stateMachine.getOperation(RETRY_OPERATION_NAME);
         this.initialState = stateMachine.getState(INIT_STATE_NAME);
         this.retriedState = stateMachine.getState(RETRIED_STATE_NAME);
+        this.abortedState = stateMachine.getState(ABORTED_STATE_NAME);
     }
 
     public State getState(final String stateName) throws MissingEntryException {
@@ -66,5 +69,9 @@ public class PaymentControlStateMachineHelper {
 
     public State getRetriedState() {
         return retriedState;
+    }
+
+    public State getAbortedState() {
+        return abortedState;
     }
 }

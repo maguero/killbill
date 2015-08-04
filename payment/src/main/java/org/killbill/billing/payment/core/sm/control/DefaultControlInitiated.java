@@ -17,46 +17,29 @@
 
 package org.killbill.billing.payment.core.sm.control;
 
-import org.joda.time.DateTime;
 import org.killbill.automaton.OperationException;
 import org.killbill.automaton.State;
 import org.killbill.automaton.State.LeavingStateCallback;
-import org.killbill.billing.payment.api.TransactionType;
 import org.killbill.billing.payment.core.sm.PaymentStateContext;
-import org.killbill.billing.payment.core.sm.PluginControlPaymentAutomatonRunner;
-import org.killbill.billing.payment.dao.PaymentAttemptModelDao;
 import org.killbill.billing.payment.dao.PaymentDao;
 import org.killbill.billing.payment.dao.PaymentModelDao;
 import org.killbill.billing.payment.dao.PaymentTransactionModelDao;
-import org.killbill.billing.payment.dao.PluginPropertySerializer;
-import org.killbill.billing.payment.dao.PluginPropertySerializer.PluginPropertySerializerException;
 import org.killbill.billing.util.UUIDs;
 
 import com.google.common.base.Preconditions;
 
 public class DefaultControlInitiated implements LeavingStateCallback {
 
-    private final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner;
     private final PaymentStateControlContext stateContext;
-    private final State initialState;
-    private final State retriedState;
-    private final TransactionType transactionType;
     private final PaymentDao paymentDao;
 
-    public DefaultControlInitiated(final PluginControlPaymentAutomatonRunner pluginControlPaymentAutomatonRunner, final PaymentStateContext stateContext, final PaymentDao paymentDao,
-                                   final State initialState, final State retriedState, final TransactionType transactionType) {
-        this.pluginControlPaymentAutomatonRunner = pluginControlPaymentAutomatonRunner;
+    public DefaultControlInitiated(final PaymentStateContext stateContext, final PaymentDao paymentDao) {
         this.paymentDao = paymentDao;
-        this.initialState = initialState;
-        this.retriedState = retriedState;
         this.stateContext = (PaymentStateControlContext) stateContext;
-        this.transactionType = transactionType;
     }
 
     @Override
     public void leavingState(final State state) throws OperationException {
-        final DateTime utcNow = pluginControlPaymentAutomatonRunner.getClock().getUTCNow();
-
         if (stateContext.getPaymentId() != null && stateContext.getPaymentExternalKey() == null) {
             final PaymentModelDao payment = paymentDao.getPayment(stateContext.getPaymentId(), stateContext.getInternalCallContext());
             Preconditions.checkNotNull(payment, "payment cannot be null for id " + stateContext.getPaymentId());
@@ -70,24 +53,6 @@ public class DefaultControlInitiated implements LeavingStateCallback {
             stateContext.setPaymentTransactionExternalKey(paymentTransactionModelDao.getTransactionExternalKey());
         } else if (stateContext.getPaymentTransactionExternalKey() == null) {
             stateContext.setPaymentTransactionExternalKey(UUIDs.randomUUID().toString());
-        }
-
-        if (state.getName().equals(initialState.getName()) || state.getName().equals(retriedState.getName())) {
-            try {
-                final byte[] serializedProperties = PluginPropertySerializer.serialize(stateContext.getProperties());
-
-                final PaymentAttemptModelDao attempt = new PaymentAttemptModelDao(stateContext.getAccount().getId(), stateContext.getPaymentMethodId(),
-                                                                                  utcNow, utcNow, stateContext.getPaymentExternalKey(), stateContext.getTransactionId(),
-                                                                                  stateContext.getPaymentTransactionExternalKey(), transactionType, initialState.getName(),
-                                                                                  stateContext.getAmount(), stateContext.getCurrency(),
-                                                                                  stateContext.getPaymentControlPluginNames(), serializedProperties);
-
-                pluginControlPaymentAutomatonRunner.getPaymentDao().insertPaymentAttemptWithProperties(attempt, stateContext.getInternalCallContext());
-
-                stateContext.setAttemptId(attempt.getId());
-            } catch (final PluginPropertySerializerException e) {
-                throw new OperationException(e);
-            }
         }
     }
 }

@@ -194,6 +194,9 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
         final TransactionType transactionType = paymentControlContext.getTransactionType();
         switch (transactionType) {
             case PURCHASE:
+                //
+                insert_AUTO_PAY_OFF_ifRequired(paymentControlContext, paymentControlContext.getAmount());
+
                 final DateTime nextRetryDate = computeNextRetryDate(paymentControlContext.getPaymentExternalKey(), paymentControlContext.isApiPayment(), internalContext);
                 return new DefaultFailureCallResult(nextRetryDate);
             case REFUND:
@@ -223,14 +226,14 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
         return UUID.fromString((String) invoiceProp.getValue());
     }
 
-    private PriorPaymentRoutingResult getPluginPurchaseResult(final PaymentRoutingContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
+    private PriorPaymentRoutingResult  getPluginPurchaseResult(final PaymentRoutingContext paymentControlPluginContext, final InternalCallContext internalContext) throws PaymentRoutingApiException {
         try {
             final UUID invoiceId = getInvoiceId(paymentControlPluginContext);
             final Invoice invoice = rebalanceAndGetInvoice(invoiceId, internalContext);
             final BigDecimal requestedAmount = validateAndComputePaymentAmount(invoice, paymentControlPluginContext.getAmount(), paymentControlPluginContext.isApiPayment());
 
             final boolean isAborted = requestedAmount.compareTo(BigDecimal.ZERO) == 0;
-            if (!isAborted && insert_AUTO_PAY_OFF_ifRequired(paymentControlPluginContext, requestedAmount)) {
+            if (!isAborted && shouldAbortPaymentDueTo_AUTO_PAY_OFF(paymentControlPluginContext)) {
                 return new DefaultPriorPaymentRoutingResult(true);
             }
 
@@ -455,16 +458,18 @@ public final class InvoicePaymentControlPluginApi implements PaymentRoutingPlugi
         }
     }
 
-    private boolean insert_AUTO_PAY_OFF_ifRequired(final PaymentRoutingContext paymentControlContext, final BigDecimal computedAmount) {
-        if (paymentControlContext.isApiPayment() || !isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext)) {
-            return false;
+    private void insert_AUTO_PAY_OFF_ifRequired(final PaymentRoutingContext paymentControlContext, final BigDecimal computedAmount) {
+        if (shouldAbortPaymentDueTo_AUTO_PAY_OFF(paymentControlContext)) {
+            final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
+                                                                               paymentControlContext.getAccountId(), PLUGIN_NAME,
+                                                                               paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
+                                                                               computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
+            controlDao.insertAutoPayOff(data);
         }
-        final PluginAutoPayOffModelDao data = new PluginAutoPayOffModelDao(paymentControlContext.getAttemptPaymentId(), paymentControlContext.getPaymentExternalKey(), paymentControlContext.getTransactionExternalKey(),
-                                                                           paymentControlContext.getAccountId(), PLUGIN_NAME,
-                                                                           paymentControlContext.getPaymentId(), paymentControlContext.getPaymentMethodId(),
-                                                                           computedAmount, paymentControlContext.getCurrency(), CREATED_BY, clock.getUTCNow());
-        controlDao.insertAutoPayOff(data);
-        return true;
+    }
+
+    private boolean shouldAbortPaymentDueTo_AUTO_PAY_OFF(final PaymentRoutingContext paymentControlContext) {
+        return !paymentControlContext.isApiPayment() && isAccountAutoPayOff(paymentControlContext.getAccountId(), paymentControlContext);
     }
 
     private boolean isAccountAutoPayOff(final UUID accountId, final CallContext callContext) {

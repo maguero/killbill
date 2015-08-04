@@ -45,13 +45,9 @@ public class Janitor {
 
     private static final Logger log = LoggerFactory.getLogger(Janitor.class);
 
-    private static final int TERMINATION_TIMEOUT_SEC = 5;
     public static final String QUEUE_NAME = "janitor";
 
     private final NotificationQueueService notificationQueueService;
-    private final ScheduledExecutorService janitorExecutor;
-    private final PaymentConfig paymentConfig;
-    private final IncompletePaymentAttemptTask incompletePaymentAttemptTask;
     private final IncompletePaymentTransactionTask incompletePaymentTransactionTask;
 
     private NotificationQueue janitorQueue;
@@ -59,15 +55,9 @@ public class Janitor {
     private volatile boolean isStopped;
 
     @Inject
-    public Janitor(final PaymentConfig paymentConfig,
-                   final NotificationQueueService notificationQueueService,
-                   @Named(PaymentModule.JANITOR_EXECUTOR_NAMED) final ScheduledExecutorService janitorExecutor,
-                   final IncompletePaymentAttemptTask incompletePaymentAttemptTask,
+    public Janitor(final NotificationQueueService notificationQueueService,
                    final IncompletePaymentTransactionTask incompletePaymentTransactionTask) {
         this.notificationQueueService = notificationQueueService;
-        this.janitorExecutor = janitorExecutor;
-        this.paymentConfig = paymentConfig;
-        this.incompletePaymentAttemptTask = incompletePaymentAttemptTask;
         this.incompletePaymentTransactionTask = incompletePaymentTransactionTask;
         this.isStopped = false;
     }
@@ -91,7 +81,6 @@ public class Janitor {
                                                                         }
                                                                        );
         incompletePaymentTransactionTask.attachJanitorQueue(janitorQueue);
-        incompletePaymentAttemptTask.attachJanitorQueue(janitorQueue);
     }
 
     public void start() {
@@ -99,18 +88,7 @@ public class Janitor {
             log.warn("Janitor is not a restartable service, and was already started, aborting");
             return;
         }
-
         janitorQueue.startQueue();
-
-        // Start task for completing incomplete payment attempts
-        final TimeUnit attemptCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
-        final long attemptCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(incompletePaymentAttemptTask, attemptCompletionPeriod, attemptCompletionPeriod, attemptCompletionRateUnit);
-
-        // Start task for completing incomplete payment attempts
-        final TimeUnit erroredCompletionRateUnit = paymentConfig.getJanitorRunningRate().getUnit();
-        final long erroredCompletionPeriod = paymentConfig.getJanitorRunningRate().getPeriod();
-        janitorExecutor.scheduleAtFixedRate(incompletePaymentTransactionTask, erroredCompletionPeriod, erroredCompletionPeriod, erroredCompletionRateUnit);
     }
 
     public void stop() throws NoSuchNotificationQueue {
@@ -119,35 +97,19 @@ public class Janitor {
             return;
         }
 
-        incompletePaymentAttemptTask.stop();
         incompletePaymentTransactionTask.stop();
 
         try {
-            /* Previously submitted tasks will be executed with shutdown(); when task executes as a result of shutdown being called
-             * or because it was already in its execution loop, it will check for the volatile boolean isStopped flag and
-             * return immediately.
-             * Then, awaitTermination with a timeout is required to ensure tasks completed.
-             */
-            janitorExecutor.shutdown();
-            final boolean success = janitorExecutor.awaitTermination(TERMINATION_TIMEOUT_SEC, TimeUnit.SECONDS);
-            if (!success) {
-                log.warn("Janitor failed to complete termination within " + TERMINATION_TIMEOUT_SEC + "sec");
-            }
-
             if (janitorQueue != null) {
                 janitorQueue.stopQueue();
                 notificationQueueService.deleteNotificationQueue(DefaultPaymentService.SERVICE_NAME, QUEUE_NAME);
             }
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Janitor stop sequence got interrupted");
         } finally {
             isStopped = true;
         }
     }
 
     public void processPaymentEvent(final PaymentInternalEvent event) {
-        incompletePaymentAttemptTask.processPaymentEvent(event, janitorQueue);
         incompletePaymentTransactionTask.processPaymentEvent(event, janitorQueue);
     }
 }

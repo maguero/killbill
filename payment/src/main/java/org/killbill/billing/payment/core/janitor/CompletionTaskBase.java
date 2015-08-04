@@ -48,7 +48,7 @@ import org.killbill.notificationq.api.NotificationQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-abstract class CompletionTaskBase<T> implements Runnable {
+abstract class CompletionTaskBase<T> {
 
     protected Logger log = LoggerFactory.getLogger(CompletionTaskBase.class);
 
@@ -82,33 +82,11 @@ abstract class CompletionTaskBase<T> implements Runnable {
         this.isStopped = false;
     }
 
-    @Override
-    public void run() {
-        if (isStopped) {
-            log.info("Janitor was requested to stop");
-            return;
-        }
-        final Iterable<T> items = getItemsForIteration();
-        for (final T item : items) {
-            if (isStopped) {
-                log.info("Janitor was requested to stop");
-                return;
-            }
-            try {
-                doIteration(item);
-            } catch (final IllegalStateException e) {
-                log.warn(e.getMessage());
-            }
-        }
-    }
 
     public synchronized void stop() {
         this.isStopped = true;
     }
 
-    public abstract Iterable<T> getItemsForIteration();
-
-    public abstract void doIteration(final T item);
 
     public abstract void processPaymentEvent(final PaymentInternalEvent event, final NotificationQueue janitorQueue) throws IOException;
 

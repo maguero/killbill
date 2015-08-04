@@ -52,7 +52,7 @@ public class InvoicePaymentControlDao {
                 handle.execute("insert into _invoice_payment_control_plugin_auto_pay_off " +
                                "(attempt_id, payment_external_key, transaction_external_key, account_id, plugin_name, payment_id, payment_method_id, amount, currency, created_by, created_date) values " +
                                "(?,?,?,?,?,?,?,?,?,?,?)",
-                               data.getAttemptId().toString(), data.getPaymentExternalKey(), data.getTransactionExternalKey(), data.getAccountId(), data.getPluginName(), paymentId, paymentMethodId,
+                               data.getAttemptId(), data.getPaymentExternalKey(), data.getTransactionExternalKey(), data.getAccountId(), data.getPluginName(), paymentId, paymentMethodId,
                                data.getAmount(), data.getCurrency(), data.getCreatedBy(), data.getCreatedDate()
                               );
                 return null;

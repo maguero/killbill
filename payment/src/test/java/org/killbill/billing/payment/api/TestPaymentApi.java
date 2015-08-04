@@ -263,9 +263,8 @@ public class TestPaymentApi extends PaymentTestSuiteWithEmbeddedDB {
         assertNull(payment.getTransactions().get(0).getGatewayErrorMsg());
         assertNull(payment.getTransactions().get(0).getGatewayErrorCode());
 
-        // Not stricly an API test but interesting to verify that we indeed went through the attempt logic
         final List<PaymentAttemptModelDao> attempts = paymentDao.getPaymentAttempts(payment.getExternalKey(), internalCallContext);
-        assertEquals(attempts.size(), 1);
+        assertEquals(attempts.size(), 0);
     }
 
     @Test(groups = "slow")

@@ -72,6 +72,21 @@ public class PaymentStateControlContext extends PaymentStateContext {
         this.result = result;
     }
 
+    public void get(final Payment result) {
+        this.result = result;
+    }
+
+    public UUID getPaymentId() {
+        // This is horrible...
+        if (result != null) {
+            return result.getId();
+        } else {
+            return super.getPaymentId();
+        }
+    }
+
+
+
     public void setAmount(final BigDecimal adjustedAmount) {
         this.amount = adjustedAmount;
     }
@@ -88,11 +103,6 @@ public class PaymentStateControlContext extends PaymentStateContext {
         if (result == null || result.getTransactions() == null) {
             return null;
         }
-        return Iterables.tryFind(result.getTransactions(), new Predicate<PaymentTransaction>() {
-            @Override
-            public boolean apply(final PaymentTransaction input) {
-                return ((DefaultPaymentTransaction) input).getAttemptId().equals(attemptId);
-            }
-        }).orNull();
+        return result.getTransactions().get(result.getTransactions().size() -1);
     }
 }

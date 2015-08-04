@@ -41,7 +41,6 @@ import org.killbill.billing.payment.core.PaymentGatewayProcessor;
 import org.killbill.billing.payment.core.PaymentMethodProcessor;
 import org.killbill.billing.payment.core.PaymentProcessor;
 import org.killbill.billing.payment.core.PluginControlPaymentProcessor;
-import org.killbill.billing.payment.core.janitor.IncompletePaymentAttemptTask;
 import org.killbill.billing.payment.core.janitor.IncompletePaymentTransactionTask;
 import org.killbill.billing.payment.core.janitor.Janitor;
 import org.killbill.billing.payment.core.sm.PaymentControlStateMachineHelper;
@@ -74,7 +73,6 @@ public class PaymentModule extends KillBillModule {
 
     private static final String PLUGIN_THREAD_PREFIX = "Plugin-th-";
 
-    public static final String JANITOR_EXECUTOR_NAMED = "JanitorExecutor";
     public static final String PLUGIN_EXECUTOR_NAMED = "PluginExecutor";
     public static final String RETRYABLE_NAMED = "Retryable";
 
@@ -100,11 +98,7 @@ public class PaymentModule extends KillBillModule {
     }
 
     protected void installJanitor() {
-        final ScheduledExecutorService janitorExecutor = org.killbill.commons.concurrent.Executors.newSingleThreadScheduledExecutor("PaymentJanitor");
-        bind(ScheduledExecutorService.class).annotatedWith(Names.named(JANITOR_EXECUTOR_NAMED)).toInstance(janitorExecutor);
-
         bind(IncompletePaymentTransactionTask.class).asEagerSingleton();
-        bind(IncompletePaymentAttemptTask.class).asEagerSingleton();
         bind(Janitor.class).asEagerSingleton();
     }
 
