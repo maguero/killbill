@@ -555,14 +555,13 @@ public class TestDefaultInvoiceGenerator extends InvoiceTestSuiteNoDB {
         events.add(createBillingEvent(UUID.randomUUID(), UUID.randomUUID(), targetDate, plan, planPhase, 1));
 
         final Invoice invoice = generator.generateInvoice(account, events, null, targetDate, Currency.USD, internalCallContext);
-
-        assertEquals(invoice.getNumberOfItems(), 1);
+        assertNull(invoice);
     }
 
     @Test(groups = "fast")
     public void testEndDateIsCorrect() throws InvoiceApiException, CatalogApiException {
         final Plan plan = new MockPlan();
-        final PlanPhase planPhase = createMockMonthlyPlanPhase(ZERO);
+        final PlanPhase planPhase = createMockMonthlyPlanPhase(ONE);
         final BillingEventSet events = new MockBillingEventSet();
         final LocalDate startDate = clock.getUTCToday().minusDays(1);
         final LocalDate targetDate = startDate.plusDays(1);

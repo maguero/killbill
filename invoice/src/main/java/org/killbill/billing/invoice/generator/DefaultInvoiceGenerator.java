@@ -323,15 +323,17 @@ public class DefaultInvoiceGenerator implements InvoiceGenerator {
                     if (rate != null) {
                         final BigDecimal amount = KillBillMoney.of(itemDatum.getNumberOfCycles().multiply(rate), currency);
 
-                        final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
-                                                                                            accountId,
-                                                                                            thisEvent.getSubscription().getBundleId(),
-                                                                                            thisEvent.getSubscription().getId(),
-                                                                                            thisEvent.getPlan().getName(),
-                                                                                            thisEvent.getPlanPhase().getName(),
-                                                                                            itemDatum.getStartDate(), itemDatum.getEndDate(),
-                                                                                            amount, rate, currency);
-                        items.add(recurringItem);
+                        if (amount.compareTo(BigDecimal.ZERO) != 0) {
+                            final RecurringInvoiceItem recurringItem = new RecurringInvoiceItem(invoiceId,
+                                                                                                accountId,
+                                                                                                thisEvent.getSubscription().getBundleId(),
+                                                                                                thisEvent.getSubscription().getId(),
+                                                                                                thisEvent.getPlan().getName(),
+                                                                                                thisEvent.getPlanPhase().getName(),
+                                                                                                itemDatum.getStartDate(), itemDatum.getEndDate(),
+                                                                                                amount, rate, currency);
+                            items.add(recurringItem);
+                        }
                     }
                 }
             }
