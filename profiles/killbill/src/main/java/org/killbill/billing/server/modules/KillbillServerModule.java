@@ -23,13 +23,16 @@ import javax.servlet.ServletContext;
 import org.killbill.billing.account.glue.DefaultAccountModule;
 import org.killbill.billing.beatrix.glue.BeatrixModule;
 import org.killbill.billing.catalog.glue.CatalogModule;
+import org.killbill.billing.coupon.glue.DefaultCouponModule;
 import org.killbill.billing.currency.glue.CurrencyModule;
 import org.killbill.billing.entitlement.glue.DefaultEntitlementModule;
+import org.killbill.billing.glue.CouponModule;
 import org.killbill.billing.invoice.glue.DefaultInvoiceModule;
 import org.killbill.billing.jaxrs.resources.AccountResource;
 import org.killbill.billing.jaxrs.resources.AdminResource;
 import org.killbill.billing.jaxrs.resources.BundleResource;
 import org.killbill.billing.jaxrs.resources.CatalogResource;
+import org.killbill.billing.jaxrs.resources.CouponResource;
 import org.killbill.billing.jaxrs.resources.CreditResource;
 import org.killbill.billing.jaxrs.resources.CustomFieldResource;
 import org.killbill.billing.jaxrs.resources.ExportResource;
@@ -161,6 +164,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         install(new TemplateModule(configSource));
         install(new DefaultTenantModule(configSource));
         install(new UsageModule(configSource));
+        install(new DefaultCouponModule(configSource));
     }
 
     protected void configureResources() {
@@ -186,6 +190,7 @@ public class KillbillServerModule extends KillbillPlatformModule {
         bind(TransactionResource.class).asEagerSingleton();
         bind(UsageResource.class).asEagerSingleton();
         bind(AdminResource.class).asEagerSingleton();
+        bind(CouponResource.class).asEagerSingleton();
     }
 
     protected void configureFilters() {

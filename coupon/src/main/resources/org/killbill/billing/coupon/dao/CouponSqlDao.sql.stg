@@ -1,0 +1,51 @@
+group CouponSqlDao: EntitySqlDao;
+
+tableName() ::= "coupons"
+
+tableFields(prefix) ::= <<
+  <prefix>coupon_code
+, <prefix>coupon_name
+>>
+
+tableValues() ::= <<
+  :couponCode
+, :couponName
+>>
+
+/** The accounts table doesn't have an account_record_id column (it's the record_id) **/
+accountRecordIdFieldWithComma(prefix) ::= ""
+accountRecordIdValueWithComma(prefix) ::= ""
+
+update() ::= <<
+    UPDATE coupons
+    SET coupon_name = :couponName
+    WHERE id = :id <AND_CHECK_TENANT()>;
+>>
+
+/** for future referencies
+updatePaymentMethod() ::= <<
+    UPDATE accounts
+    SET payment_method_id = :paymentMethodId
+    , updated_date = :updatedDate
+    , updated_by = :updatedBy
+    WHERE id = :id <AND_CHECK_TENANT()>;
+>>
+*/
+
+getCouponByCode() ::= <<
+    select <allTableFields()>
+    from coupons
+    where coupon_code = :couponCode <AND_CHECK_TENANT()>;
+>>
+
+searchQuery(prefix) ::= <<
+     <idField(prefix)> = :searchKey
+  or <prefix>coupon_code like :likeSearchKey
+  or <prefix>coupon_name like :likeSearchKey
+>>
+
+getIdFromCode() ::= <<
+    SELECT id
+    FROM coupons
+    WHERE coupon_code = :couponCode <AND_CHECK_TENANT()>;
+>>

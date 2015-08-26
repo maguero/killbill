@@ -77,6 +77,7 @@ public interface JaxrsResource {
     public static final String QUERY_ACCOUNT_WITH_BALANCE_AND_CBA = "accountWithBalanceAndCBA";
 
     public static final String QUERY_ACCOUNT_ID = "accountId";
+    public static final String QUERY_COUPON_CODE = "couponCode";
 
     public static final String QUERY_INVOICE_WITH_ITEMS = "withItems";
     public static final String QUERY_UNPAID_INVOICES_ONLY = "unpaidInvoicesOnly";
@@ -122,6 +123,9 @@ public interface JaxrsResource {
 
     public static final String ACCOUNTS = "accounts";
     public static final String ACCOUNTS_PATH = PREFIX + "/" + ACCOUNTS;
+
+    public static final String COUPONS = "coupons";
+    public static final String COUPONS_PATH = PREFIX + "/" + COUPONS;
 
     public static final String ANALYTICS = "analytics";
     public static final String ANALYTICS_PATH = PREFIX + "/" + ANALYTICS;

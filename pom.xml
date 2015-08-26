@@ -21,7 +21,7 @@
     <parent>
         <artifactId>killbill-oss-parent</artifactId>
         <groupId>org.kill-bill.billing</groupId>
-        <version>0.38</version>
+        <version>0.39-hootsuite-SNAPSHOT</version>
     </parent>
     <artifactId>killbill</artifactId>
     <version>0.15.4-SNAPSHOT</version>
@@ -46,6 +46,7 @@
         <module>tenant</module>
         <module>currency</module>
         <module>profiles</module>
+        <module>coupon</module>
     </modules>
     <scm>
         <connection>scm:git:git://github.com/killbill/killbill.git</connection>

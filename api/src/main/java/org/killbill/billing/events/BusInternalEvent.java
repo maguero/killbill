@@ -30,6 +30,8 @@ public interface BusInternalEvent extends BusEvent {
         CONTROL_TAGDEFINITION_DELETION,
         CONTROL_TAG_CREATION,
         CONTROL_TAG_DELETION,
+        COUPON_CHANGE,
+        COUPON_CREATE,
         CUSTOM_FIELD_CREATION,
         CUSTOM_FIELD_DELETION,
         ENTITLEMENT_TRANSITION,
